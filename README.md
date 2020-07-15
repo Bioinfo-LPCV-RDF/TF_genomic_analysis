@@ -160,8 +160,8 @@ general infos: comparison of peak coverages between two samples or replicates,
                plots with both for comparison, CFR: coverages fold reduction)  
 </pre>  
 
+-- Mandatory arguments:
 <pre>
--- Mandatory arguments:  
     -n1     STRING  :    name of directory for dataset 1  
     -n2     STRING  :    name of directory for dataset 2  
     -od     PATH    :    Set the Output directory, where you will find the   
@@ -378,7 +378,7 @@ general infos: computes heatmap of coverages to compare two sets of given peaks.
   
   
 usage:
-</pre>
+<pre>
  $ spacing_impact -n [STRING1] [STRING2] -cp [PATH] -od [PATH] -g [FILE]   
        -m [FILE] -maxs [INT] -mins [INT] -ol [INT] -or [INT] -sth [INT] -eth   
        [INT] -ith [INT] -sp [FLOAT1] .. [FLOATN] -c [STRING1] .. [STRINGN]  
