@@ -1,6 +1,6 @@
   
 This pipeline is used for DAP-seq analysis of MADS transcription Factors.  
-Compil_function.sh gathers all the functions needed for the analysis and Wrapper_MADS_tetra_paper.sh call all these functions, with specific parameters.   
+Compil_function.sh gathers all the functions needed for the analysis and Wrapper_MADS_tetra_paper.sh call these functions, with specific parameters.   
 The codes to generate the figures 5, S8 and S10 are not in the wrapper and have to be launched separately (see ### 10. and ### 11. ).  
   
 ## DEPENDENCIES  
@@ -424,7 +424,7 @@ general infos: creates a plot showing the relation of the ratio of coverages
   
 <pre>   
 general infos : This program is in the scripts_figure_5.tar.gz archive. It is   
-		  not part of the wrapper and has to be launched sepparately.  
+		  not part of the wrapper and has to be launched separately.  
 		  The data needed to generate the figures are contained in the   
 		  scripts_figure_5/data/ folder. It contains the DAP-seq   
 		  peaks of SEP3 and SEP3AG (See ### 2.Peak Calling), the ChIP-seq  
@@ -445,7 +445,7 @@ usage : To launch the code, follow these instructions :
 ### 11 Comparing binding sites quality in SEP3AG DAP-seq peaks and SEP3/AG ChIP-seq peaks (figure S8)  
 <pre>  
 general infos : This program is in the scripts_supp_fig_8.tar.gz archive. It is   
-		  not part of the wrapper and has to be launched sepparately.  
+		  not part of the wrapper and has to be launched separately.  
 		  The data needed to generate the figures are contained in the   
 		  scripts_figure_5/data/ folder. It contains the DAP-seq   
 		  peaks of SEP3AG (See ### 2.Peak Calling), the ChIP-seq  
