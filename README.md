@@ -99,7 +99,7 @@ general infos: directory and file preparation for mapping step
 ### 2.Peak Calling  
   
 Using Macs2 and MSPC to treat multiple replicates. After MSPC, peaks are resized to 400pb around maximums if they are separated by more than 200pb. This is to ensure that two close peaks are not considered as one.  
-  
+<pre>  
 example for peak resizing:  
 </>: extremities for the peaks  
 | : maximum of peaks, determined by Macs2  
@@ -110,7 +110,7 @@ replica:                            <------------------------|-------->
   
 consensus MSPC:      <------------------------------------------------>  
 peaks resized          <-----------|-----------> <-----------|----------->  
-  
+</pre>  
   
 usage:
 <pre>
