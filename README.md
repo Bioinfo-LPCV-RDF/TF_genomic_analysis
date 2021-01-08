@@ -1,6 +1,8 @@
   
-This pipeline is used for DAP-seq analysis of MADS transcription Factors.  
-Compil_function.sh gathers all the functions needed for the analysis and Wrapper_MADS_tetra_paper.sh call these functions, with specific parameters.   
+This pipeline is used for analyzing genomic data (such as ChIP and DAP-seq) of transcription factors (TF).  
+compil_function.sh gathers all the functions needed for an analysis: from read mapping, peak calling and filtering to downstream analyses of regions bound by a TF such as binding motif discovery and investigation the effect of genomic context (methylation, nucleomosomes occupancy) on TF binding.
+
+An exemple of usage is Wrapper_MADS_tetra_paper.sh where the functions are called with specific parameters for analyses of DAP-seq of MADS.   
 The codes to generate the figures 5, S8 and S10 are not in the wrapper and have to be launched separately (see ### 10. and ### 11. ).  
   
 ## DEPENDENCIES  
