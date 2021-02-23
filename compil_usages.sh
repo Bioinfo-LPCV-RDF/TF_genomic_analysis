@@ -2,13 +2,29 @@
 
 usage(){
 	case $1 in
+	download_SRA)
+echo -e "
+==========
+usage: download_SRA -f <LIST of STRING> -o <PATH> -t [INT]
+
+general infos: 
+
+-- Mandatory arguments:
+    -f      STRING  :    List of SRA IDs to download. example: 
+                         (\"STR1\" \"STR2\" ... \"STRn\")
+    -o      PATH    :    Set the Output directory, where you will find the 
+                         FASTQ files created by this program.
+
+-- optional arguments :
+    -t     INT      :    Set the number of threads to use. (default: 1)
+\n";;
 	mapping_Fastq_bowtie2)
 echo -e "
 ==========
 usage: mapping_Fastq_bowtie2 -id <PATH> -od <PATH> -s [int] -pr [int]
 
-general infos: Perfome short reads mapping and filtering (PCR duplicates, poor mapping 
-               quality, multimapping removed).
+general infos: Perfoms short reads mapping and filtering (PCR duplicates, poor 
+               mapping quality, multimapping removed).
 
 -- Mandatory arguments:
     -id     PATH    :    Set the directory where the Fastq is stored.
@@ -35,9 +51,9 @@ general infos: directory and file preparation for the mapping step
                          pasted in the directory selected here.
     -md     PATH    :    Set the Output directory, where you will find the BAM
                          files created by this programs.
-    -f1     FILE    :    Set the Fastq file to be used for the mapping. In case
-                         of paired-end analysis please separate pairs in two
-                         files (see -f2 argument)
+    -f1     FILE    :    Set the Fastq file to be used for the mapping. In 
+                         case of paired-end analysis please separate pairs in 
+                         two files (see -f2 argument)
     -n      STRING  :    Name of the sub-folder to be created in the output
                          directory.
 
@@ -91,6 +107,8 @@ general infos: file/directory preparation, peakcalling_MACS2 launching,
                          consensus NarrowPeak & BEDGRAPH will be stored
 
 -- optional arguments :
+    -ps     INT     :    Used to resize peaks region both side of the max height
+                         default is 400 bp (i.e. 200 bp at each side)
     -g      INT     :    Set the genome length to use as reference for peak 
                          calling
     -add    STRING  :    Set the additionnal parameters for MACS2 (option used
@@ -105,11 +123,11 @@ echo -e "
 usage: initial_comparison -n1 <STRING> -n2 <STRING> -od <PATH> -id <PATH> 
        -r1 <INT> -r2 <INT> -f [INT]
 
-general infos: comparison of peaks coverage from any two samples or replicats, 
-               filtered (optional) by the height of maximum or global peak coverages, 
-               plot the union of peaks depending of coverages in the two samples, 
-               peak reattribution according to CFR (and not according to peak caller; 
-               plots with both for comparison).
+general infos: comparison of peaks coverage from any two samples or replicats,
+               filtered (optional) by the height of maximum or global peak 
+               coverages,  plot the union of peaks depending of coverages in 
+               the two samples, peak reattribution according to CFR (and not 
+               according to peak caller; plots with both for comparison).
 
 CFR: coverages fold ratio
 
@@ -130,7 +148,7 @@ CFR: coverages fold ratio
     -f      INT     :    Threshold of coverage -in RPKM-. Filters out peaks
                          for which for both samples do not pass the threshold.
     -he     INT     :    Threshold on the maximum height of coverage -in RPKM-
-                         Filters out peaks for which both samples have maximum 
+                         Filters out peaks for which both samples have maximum
                          of coverage below this value.
 \n";;
 	compute_motif) 
@@ -152,6 +170,9 @@ TFFM: Transcription Factor Flexible Model
                          subdirectory created by -n option)
 
 -- optional arguments :
+    -c      INT     :    Set the column number (base 1) to use as a coverage
+                         column in the peak file (-p argument). This column 
+                         will be used for a numeric sort.
     -g      FILE    :    Set the genome file to use as reference
     -ls     INT     :    Set the learning-size for both PWM and TFFM 
                          matrices
@@ -184,7 +205,7 @@ gff should include chromosomes features and standard gff3 format
 echo -e "
 ==========
 usage: compute_NS -p <FILE> -n <STRING> -g <FILE> -od <PATH> -anf <FILE> 
-       -nb [INT] -bs [INT] -gc [INT] -lt [INT] -s [INT]
+       -nb [INT] -ws [INT] -gc [INT] -lt [INT] -s [INT]
 
 general infos: creation of negative sets (for ROCs and spacing analysis). 
                Negative sequences are created to be the closest possible to 
@@ -216,46 +237,57 @@ general infos: creation of negative sets (for ROCs and spacing analysis).
 	compute_ROCS) 
 echo -e "
 ==========
-usage: compute_ROCS -p <FILE1> <FILEn> -ns <FILE1> <FILEn> -m <FILE1> <FILEn>
-       -n <STRING1> <STRINGn> -od <PATH> -g [FILE] [-pc] -color [STRING1] 
-       [STRINGn]
+usage: compute_ROCS -p <LIST of FILE> -ns <LIST of FILE> -m <LIST of FILE>
+       -n <LIST of STRING> -od <PATH> -g [FILE] [-pc] -color [LIST of STRING]
+       -nKSM [INT]
 
 general infos: computes scores for PWM/TFFM on negative sequences and peaks.
                Computes ROCs and AUCROC from those scores.
 
 -- Mandatory arguments:
-    -ns    FILEs    :    name of the negative sets
-    -p     FILEs    :    peak file (bed format)
-    -m     FILEs    :    matrices files
+    -ns    FILE     :    List of names of the negative sets. Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -p     FILE     :    List of peak files (bed format). Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -m     FILE     :    List of matrices files. Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
     -od    PATH     :    Set the Output directory
-    -n     STRING   :    name for the sets in the ROCs
+    -n     STRING   :    List of names for the sets in the ROCs. Example:
+                         (\"STRING1\" \"STRING2\" ... \"STRINGn\")
 
 -- optional arguments :
     -g     FILE     :    Fasta of the genome used as reference.
     -pc             :    pocc mode. 
     -color STRINGs  :    list of colors to use in each set (hexadecimal).
+                         . Example: (\"STRING1\" \"STRING2\" ... \"STRINGn\")
+	-nKSM  INT      :    Number of kmer set motif to be used (default: all)
+	-sKSM  STRING   :    Methode to compute KSM score (SUM, BEST or MEAN) (default: SUM)
 \n";;
 	compute_space) 
 echo -e "
 ==========
-usage: compute_space -p <FILE1> <FILEn> -ns <FILE1> <FILEn> -m <FILE1> <FILEn>
-       -n <STRING1> <STRINGn> -od <RESULT_DIR> -th <INT1> <INTn> 
-       -nb <NB_of_NS> -maxy [INT] -maxs [INT] -mins [INT] -ol [INT] -or [INT]
+usage: compute_space -p <LIST of FILE> -ns <LIST of FILE> -m <LIST of FILE> 
+       -n <LIST of STRING> -od <RESULT_DIR> -th <LIST of FLOAT> 
+       -nb <INT> -maxy [INT] -maxs [INT] -mins [INT] -ol [INT] -or [INT]
        -g [FILE] [-pc]
 
 general infos: computes spacing analysis on peak files and negatives sets 
                using PWM/TFFM.
 
 -- Mandatory arguments:
-    -p     FILEs    :    peak files (bed, narrowpeak format)
-    -ns    FILEs    :    name of the negative sets
+    -p     FILE     :    List of peak files (bed, narrowpeak format). Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -ns    FILE     :    List of names of the negative sets. Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
     -nb    INT      :    number of negatives sets to use against each peak 
                          file (suggested: 3; be sure to create enough negative
                          file using compute_NS)
-    -m     FILEs    :    matrices files
-    -n     STRINGs  :    name for the sets in the ROCs
+    -m     FILE     :    List of matrices files. Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -n     STRING   :    List of names for the sets in the ROCs. Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
     -od    PATH     :    Set the Output directory
-    -th    FLOATs   :    list of thresholds to use. (between 0-1 for TFFM
+    -th    FLOAT    :    list of thresholds to use. (between 0-1 for TFFM
                          matrices & between -60-0 for PWMs). Choosing 
                          thresholds can be quite complicated. One way to get
                          satisfying threshold is to set them empirically and
@@ -265,7 +297,8 @@ general infos: computes spacing analysis on peak files and negatives sets
                          PWM). If enrichment increase and reduce itself 
                          rapidly, everywhere in the graph, you are seeing 
                          noises, increase you thresholds (closer to 1 for 
-                         TFFM; closer to 0 for PWM).
+                         TFFM; closer to 0 for PWM). Example:
+                         (\"FLOAT1\" \"FLOAT2\" ... \"FLOATn\")
 
 -- optional arguments :
     -maxy  INT      :    maximum enrichment to display on y-axis.(default: NA)
@@ -289,10 +322,85 @@ general infos: computes spacing analysis on peak files and negatives sets
     -g     FILE     :    Fasta of the genome used as reference.
     -pc             :    pocc mode.
 \n";;
-	heatmap_reads)
+	compute_space_v2) # compute_space -p <PEAKS> -ns <NEG_SET_1> -nb <NB_of_NS> -m <MATRICES> -n <NAMES> -od <RESULT_DIR> -th <THRESHOLDS> -maxy <MAXY> -maxs -mins -ol -or -g -wi -nap -op -co
 echo -e "
 ==========
-usage: heatmap_reads -b <FILE1> <FILE2> -n <STRING1> <STRING2> -od <PATH> 
+usage: compute_space -p <LIST of FILE> -ns <LIST of FILE> -m <LIST of FILE> 
+       -n <LIST of STRING> -od <RESULT_DIR> -th <LIST of INT> 
+       -nb <NB_of_NS> -maxy [INT] -maxs [INT] -mins [INT] -ol [INT] -or [INT]
+       -g [FILE] -co [LIST of STRING] [-nap] [-op] [-wi]
+
+general infos: computes spacing version 2 analysis on peak files and negatives
+               sets using PWM/TFFM. This new version used R to plot the 
+               results. Plots are refreshed & codes are consolidated.
+
+-- Mandatory arguments:
+    -p     FILE     :    List of peak files (bed, narrowpeak format,fasta or     
+                         scores files accepted). Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -ns    FILE     :    List of names of the negative set (format to use for 
+                         name: *_1_neg.*). Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -nb    INT      :    number of negatives sets to use against each peak 
+                         file (suggested: 3; be sure to create enough negative
+                         file using compute_NS)
+    -m     FILE     :    List of matrices  (either PWM or TFFM). Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -n     STRING   :    List of names for the sets in the outputs. Example:
+                         (\"STRING1\" \"STRING2\" ... \"STRINGn\")
+    -od    PATH     :    Set the output directory
+    -th    FLOAT    :    list of thresholds to use. (between 0-1 for TFFM
+                         matrices & between -60-0 for PWMs). Choosing 
+                         thresholds can be quite complicated. One way to get
+                         satisfying thresholds is to set them empirically and
+                         adjust them according to the results. A warning will 
+                         be printed in terminal if thresholds are too high, 
+                         reduce them (closer to 0 for TFFM; closer to -60 for 
+                         PWM). If enrichment increase and reduce itself 
+                         rapidly, everywhere in the graph, you are seeing 
+                         noises, increase you thresholds (closer to 1 for 
+                         TFFM; closer to 0 for PWM). Example:
+                         (\"FLOAT1\" \"FLOAT2\" ... \"FLOATn\")
+
+-- optional arguments :
+    -maxy  INT      :    maximum enrichment to display on y-axis.(default: NA)
+    -maxs  INT      :    maximum spacing to compute. For dimers (using 
+                         monomeric matrices), a value between 30 to 50 bp 
+                         seems a good start. For tetramers (using dimeric 
+                         matrices) a value between 70 to 100 bp is a good 
+                         start. You may adjust those values after your first
+                         results. (default: 50)
+    -mins  INT      :    minimum spacing to compute. Usually set to 0. You may
+                         change this value if you add offsets, this will
+                         prevent huge drop off in enrichment for the first 
+                         spacings computed.
+    -ol    INT      :    offset to apply on the left of the matrix used. This
+                         argument (in addition to -or) allows to change the 
+                         way spacings are counted. This may be usefull when 
+                         you want to count space around a consensus sequence
+                         or from the center of the matrix.
+    -or    INT      :    offset to apply on the right of the matrix used. See
+                         -ol option for details.
+    -g     FILE     :    Fasta of the genome used as reference.
+    -op             :    activate \"one panel\" mode. ER, DR and IR for both 
+                         negative & positive sets will be add to each other 
+                         and plotted in only one panel. Thi mode can be useful
+                         if your matrix is palindromic.
+    -nap            :    Activate \"no absolute panel\" mode. Absolute 
+                         Enrichment will not be plotted on the side of the 
+                         panel(s). Can be called with \"-op\" argument.
+    -wi             :    Activate \"write interdistance\" mode. This will 
+                         trigger the report of every conformation & spacing 
+                         found for each file treated. Reports only duos of 
+                         sites with score higher than the lowest threshold 
+                         used.
+    -co    COLORs   :    Colors attributed to each threshold, in same order. 
+                         Colors accepted are Hexadecimals (default blu).
+\n";;
+	heatmap_reads)
+echo -e "
+========== 
+usage: heatmap_reads -b <LIST of FILE> -n <LIST of STRING> -od <PATH> 
        -cp <PATH> -s <FILE> -or [INT] -ws [INT] 
 
 general infos: computes heatmap of coverages to compare two sets. 
@@ -300,37 +408,42 @@ general infos: computes heatmap of coverages to compare two sets.
                results directory specified for \"-cp\" argument.
 
 -- Mandatory arguments:
-    -b     FILEs    :    
-    -n     STRINGs  :    name for the sets in the plot
-    -cp    PATH     :    directory \"initial_comp\" of the two samples
+    -b     FILE     :    List of Bedgraphs. Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -n     STRING   :    List of names for the sets in the plot. Example:
+                         (\"STRING1\" \"STRING2\" ... \"STRINGn\")
+    -p     PATH     :    Bed file containing the peaks to use for the heatmap.
     -s     FILE     :    chromosome sizes file (name\\tsize format)
     -od    PATH     :    Set the Output directory
 
 -- optional arguments :
-    -or     INT     :    choose which variable to use for ordering the 
+    -ow     INT     :    choose which variable to use for ordering the 
                          sequences. 3 choices: 1 to order by 1st set, 2 to 
                          order by 2nd set and 3 to order by ratio 1st/2nd.
                          (default: 3)
     -ws     INT     :    choose the size of the window to plot. (default: 
                          sequence length)
+    -c              :    Center the plots around the middle of the peaks
 \n";;
 	spacing_impact)
 echo -e "
 ==========
-usage: spacing_impact -n <STRING1> <STRING2> -cp <PATH> -od [PATH] -g <FILE> 
+usage: spacing_impact -n <LIST of STRING> -cp <PATH> -od [PATH] -g <FILE> 
        -m <FILE> -maxs [INT] -mins [INT] -ol [INT] -or [INT] -sth [INT] -eth 
-       [INT] -ith [INT] -sp <FLOAT1> .. <FLOATN> -c [STRING1] .. [STRINGN]
+       [INT] -ith [INT] -sp <LIST of FLOAT> -c [LIST of STRING]
 
 general infos: creates a plot showing the relation of the ratio of coverages 
                and the presence of some specific spacing.
 
 -- Mandatory arguments:
-    -n     STRINGs  :    name for the sets in the plot
+    -n     STRING   :    List of names for the sets in the plot. Example:
+                         (\"STRING1\" \"STRING2\" ... \"STRINGn\")
     -cp    PATH     :    directory \"initial_comp\" of the two samples
     -od    PATH     :    Set the Output directory
     -g     FILE     :    Fasta of the genome used as reference.
     -m     FILE     :    matrice file
-    -sp    FLOATs   :    Spacing to search specifically.
+    -sp    FLOAT    :    List of spacing to search specifically. Example:
+                         (\"FLOAT1\" \"FLOAT2\" ... \"FLOATn\")
 
 -- optional arguments :
     -maxs  INT      :    maximum spacing to compute. For dimers (using 
@@ -353,7 +466,27 @@ general infos: creates a plot showing the relation of the ratio of coverages
     -sth   INT      :    starting value for threshold
     -eth   INT      :    stoping value for threshold
     -ith   INT      :    incremental value for threshold
-    -c     STRINGs  :    sets of color to use in plot (hexadecimal format)
+    -c     STRING   :    List of sets of color to use in plot (hexadecimal. 
+                         format). Example: (\"STRING1\" \"STRING2\" ...
+                         \"STRINGn\")
+\n";;
+
+    add_coverage)
+echo -e "
+========== 
+usage: add_coverage -b <LIST of FILE> -n <LIST of STRING> -t <FILE> -od <PATH> 
+
+general infos: adds coverage information from a list of coverage files (with 
+               the corresponding list of names) to a table obtained from 
+               initial_comparison function
+
+-- Mandatory arguments:
+    -b     FILE     :    list of bedgraph coverage files to be added to the 
+                         table. Example: (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -n     STRING   :    list of names for each coverage file. Example:
+                         (\"STRING1\" \"STRING2\" ... \"STRINGn\")
+    -n     FILE     :    table from initial_comparison to add coverage info to
+    -od    PATH     :    Set the Output directory
 \n";;
 	*)
 echo -e "
@@ -391,12 +524,20 @@ compute_ROCS          :  computes scores for PWM/TFFM on negative sequences
                          and peaks. compute ROCs and AUCROC from those scores.
 compute_space         :  computes spacing analysis on peak files and negatives 
                          sets using PWM/TFFM.
+compute_space_v2      :  computes spacing analysis on peak files and negatives
+                         sets using PWM/TFFM. This new version uses R to plot 
+                         the results. Score is not computed at each run of the
+                         function
 heatmap_reads         :  computes heatmap of coverages to compare two sets. 
-                         \"initial_comp\" function must have been used before 
-                         and its results directory specified for \"-cp\" 
-                         argument.
+                         \"initial_comparison\" function must have been used
+                         before and its results directory specified for 
+                         \"-cp\" argument.
 spacing_impact        :  creates a plot showing the relation of the ratio of 
-                         coverages and the presence of some specific spacing
+                         coverages and the presence of some specific 
+add_coverage          :  adds coverage information from a list of coverage
+                         files (with the corresponding list of names) to a
+                         table obtained from initial_comparison function.
+
 
 created by Stigliani A. ; Lucas J. ; Blanc-Mathieu R. ; Parcy F.
 assembled by Lucas J. ; Blanc-Mathieu R.
@@ -404,16 +545,4 @@ assembled by Lucas J. ; Blanc-Mathieu R.
 	esac
 echo -e "==========\n"
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
