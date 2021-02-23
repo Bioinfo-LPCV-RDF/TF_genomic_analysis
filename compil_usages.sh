@@ -263,7 +263,66 @@ general infos: computes scores for PWM/TFFM on negative sequences and peaks.
 	-nKSM  INT      :    Number of kmer set motif to be used (default: all)
 	-sKSM  STRING   :    Methode to compute KSM score (SUM, BEST or MEAN) (default: SUM)
 \n";;
-	compute_space) # compute_space -p <PEAKS> -ns <NEG_SET_1> -nb <NB_of_NS> -m <MATRICES> -n <NAMES> -od <RESULT_DIR> -th <THRESHOLDS> -maxy <MAXY> -maxs -mins -ol -or -g -wi -nap -op -co
+      compute_space) 
+echo -e "
+==========
+usage: compute_space -p <LIST of FILE> -ns <LIST of FILE> -m <LIST of FILE> 
+       -n <LIST of STRING> -od <RESULT_DIR> -th <LIST of FLOAT> 
+       -nb <INT> -maxy [INT] -maxs [INT] -mins [INT] -ol [INT] -or [INT]
+       -g [FILE] [-pc]
+
+general infos: computes spacing analysis on peak files and negatives sets 
+               using PWM/TFFM.
+
+-- Mandatory arguments:
+    -p     FILE     :    List of peak files (bed, narrowpeak format). Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -ns    FILE     :    List of names of the negative sets. Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -nb    INT      :    number of negatives sets to use against each peak 
+                         file (suggested: 3; be sure to create enough negative
+                         file using compute_NS)
+    -m     FILE     :    List of matrices files. Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -n     STRING   :    List of names for the sets in the ROCs. Example:
+                         (\"FILE1\" \"FILE2\" ... \"FILEn\")
+    -od    PATH     :    Set the Output directory
+    -th    FLOAT    :    list of thresholds to use. (between 0-1 for TFFM
+                         matrices & between -60-0 for PWMs). Choosing 
+                         thresholds can be quite complicated. One way to get
+                         satisfying threshold is to set them empirically and
+                         adjust them according to the results. If dots are 
+                         missing for some spacing, thresholds are too high, 
+                         reduce them (closer to 0 for TFFM; closer to -60 for 
+                         PWM). If enrichment increase and reduce itself 
+                         rapidly, everywhere in the graph, you are seeing 
+                         noises, increase you thresholds (closer to 1 for 
+                         TFFM; closer to 0 for PWM). Example:
+                         (\"FLOAT1\" \"FLOAT2\" ... \"FLOATn\")
+
+-- optional arguments :
+    -maxy  INT      :    maximum enrichment to display on y-axis.(default: NA)
+    -maxs  INT      :    maximum spacing to compute. For dimers (using 
+                         monomeric matrices), a value between 30 to 50 bp 
+                         seems a good start. For tetramers (using dimeric 
+                         matrices) a value between 70 to 100 bp is a good 
+                         start. You may adjust those values after your first
+                         results. (default: )
+    -mins  INT      :    minimum spacing to compute. Usually set to 0. You may
+                         change this value if you add offsets, this will
+                         prevent huge drop off in enrichment for the first 
+                         spacings computed.
+    -ol    INT      :    offset to apply on the left of the matrix used. This
+                         argument (in addition to -or) allows to change the 
+                         way spacings are counted. This may be usefull when 
+                         you want to count space around a consensus sequence
+                         or from the center of the matrix.
+    -or    INT      :    offset to apply on the right of the matrix used. See
+                         -ol option for details.
+    -g     FILE     :    Fasta of the genome used as reference.
+    -pc             :    pocc mode.
+\n";;
+	compute_space_v2) # compute_space -p <PEAKS> -ns <NEG_SET_1> -nb <NB_of_NS> -m <MATRICES> -n <NAMES> -od <RESULT_DIR> -th <THRESHOLDS> -maxy <MAXY> -maxs -mins -ol -or -g -wi -nap -op -co
 echo -e "
 ==========
 usage: compute_space -p <LIST of FILE> -ns <LIST of FILE> -m <LIST of FILE> 
