@@ -7,7 +7,7 @@ echo -e "
 ==========
 usage: download_SRA -f <LIST of STRING> -o <PATH> -t [INT]
 
-general infos: 
+general infos: automatically/directly download datasets from NCBI's SRA repository based on SRR code
 
 -- Mandatory arguments:
     -f      STRING  :    List of SRA IDs to download. example: 
@@ -545,4 +545,3 @@ assembled by Lucas J. ; Blanc-Mathieu R.
 	esac
 echo -e "==========\n"
 }
-
