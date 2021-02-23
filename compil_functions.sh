@@ -991,11 +991,14 @@ python $plot_ROCS_prog -s $scores -n $endnames -o ${results} -of ROC.svg -c ${li
 }
 
 
+
+
 compute_space(){
 
-
-# compute_space -p <PEAKS> -ns <NEG_SET_1> -nb <NB_of_NS> -m <MATRICES> -n <NAMES> -od <RESULT_DIR> -th <THRESHOLDS> -max <MAXY>
-local pocc=false
+# compute_space -p <PEAKS> -ns <NEG_SET_1> -nb <NB_of_NS> -m <MATRICES> -n <NAMES> -od <RESULT_DIR> -th <THRESHOLDS> -maxy <MAXY> -maxs -mins -ol -or -g -wi -nap -op -co
+local write_inter=false
+local no_absolute_panel=false
+local one_panel=false
 while  [[ -n $1 ]] && [[ $1 != "\n" ]] ; do
 	case $1 in
 		-p)
@@ -1010,10 +1013,10 @@ while  [[ -n $1 ]] && [[ $1 != "\n" ]] ; do
 		-n)
 			local names=("${!2}")
 			echo "names associated set to: ${2}";shift 2;;
-        -th)
+		-th)
 			local thresholds=("${!2}")
 			echo "thresholds set to: ${2}";shift 2;;
-        -maxy)
+		-maxy)
 			local maxy=$2
 			echo "maximum enrichment to display set to: ${2}";shift 2;;
         -maxs)
@@ -1037,9 +1040,18 @@ while  [[ -n $1 ]] && [[ $1 != "\n" ]] ; do
 		-od)
 			local results=$2
 			echo "output directory set to: ${2}";shift 2;;
-		-pc)
-			local pocc=true
-			echo "Pocc mode activated, pfm will be used to compute PWM score and Pocc";shift 1;;
+		-wi)
+			local write_inter=true
+			echo "All spacings will be reported in file";shift 1;;
+		-nap)
+			local no_absolute_panel=true
+			echo "absolute enrichment panel won't be plotted";shift 1;;
+		-op)
+			local one_panel=true
+			echo "relative enrichment panels will be merged";shift 1;;
+		-co)
+			local colors=("${!2}")
+			echo "Colors to use: ${2}"; shift 2;;
 		-h)
 			usage compute_space; exit;;
 		--help)
@@ -1054,7 +1066,7 @@ local Errors=0
 if [ -z $peaks ]; then echo "ERROR: -p argument needed"; Errors+=1; fi
 if [ -z $negative_sets ]; then echo "ERROR: -ns argument needed"; Errors+=1; fi
 if [ -z $matrices ]; then echo "ERROR: -m argument needed"; Errors+=1; fi
-if [ -z $name ]; then echo "ERROR: -n argument needed"; Errors+=1; fi
+if [ -z $names ]; then echo "ERROR: -n argument needed"; Errors+=1; fi
 if [ -z $thresholds ]; then echo "ERROR: -th argument needed"; Errors+=1; fi
 if [ -z $results ]; then echo "ERROR: -od argument needed"; Errors+=1; fi
 
@@ -1065,60 +1077,106 @@ if [ -z $offset_left ]; then echo "-ol argument not used, no offset"; local offs
 if [ -z $offset_right ]; then echo "-or argument not used, no offset"; local offset_right=0; fi
 if [ -z $genome ]; then echo "-g argument not used, assuming A.thaliana is used: /home/304.6-RDF/data/tair10.fas"; local genome="/home/304.6-RDF/data/tair10.fas" ; fi
 if [ -z $number_of_NS ]; then echo "-nb argument not used, 1 negative set used"; local number_of_NS=1; fi
-# if [ -z $colors ]; then echo "-od argument not used, "; local colors=('#40A5C7' '#F9626E' '#F0875A' '#307C95' '#BB4A52' '#B46544'); fi TODO implement
+if [ -z $colors ]; then echo "-co argument not used, "; local colors=('#004899' '#004088' '#003876' '#0050aa' '#1961b2' '#3272bb' '#4c84c3' '#6696cc' '#7fa7d4' '#99b9dd'); fi
 
 if [ $Errors -gt 0 ]; then usage compute_space; exit 1; fi
 
 
-
-
-mkdir -p $results
-# spacing_mk=/home/304.6-RDF/scripts/DAP_global_analysis_p3.7/get_interdistances.py
+local additional_python=""
+local additional_R=()
+if [ $write_inter = true ];then
+	additional_python+=("-wi")
+fi
+if [ $no_absolute_panel = true ];then
+	additional_python+=("-nap")
+	additional_R+=("--no_absolute_panel")
+fi
+if [ $one_panel = true ];then
+	additional_R+=("--one_panel")
+fi
+local list_additional_R=`join_by " " "${additional_R[@]}"`
+local list_additional_python=`join_by " " "${additional_python[@]}"`
+local list_colors=`join_by "," "${colors[@]}"`
 
 for ((i=0;i<${#peaks[@]};i++))
 do
+	
 	local negative_set=${negative_sets[i]}
-	local name=${names[i]} # TODO replace \s in name by _ 
+	local name=${names[i]// /_}
 	local matrice=${matrices[i]}
 	local peak=${peaks[i]}
+	local Neg_is_fasta="false"
+	local length_mat=0
+	mkdir -p $results/${name}/scores
 	
 	local th=`join_by " " "${thresholds[@]}"`
 	neg_set="NA"
-	if [[ $peak != *".fa"* ]]; then
-        bedtools getfasta -fi $genome -bed $peak -fo $results/pos_set.fa
-        local peak=$results/pos_set.fa
-    fi
-	for ((j=1;j<$number_of_NS;j++))
-	do
-        if [[ ${negative_set} != *".fa"* ]];then
-            bedtools getfasta -fi $genome -bed ${negative_set/_1_neg.bed/_${j}_neg.bed} -fo $results/neg_set_${j}.fa
-            if [[ ${neg_set} == "NA" ]]; then
-                neg_set="$results/neg_set_${j}.fa"
-            else 
-                neg_set+=" $results/neg_set_${j}.fa"
-            fi
-        else
-			if [[ ${neg_set} == "NA" ]]; then
-				neg_set="  ${negative_set/_1_neg.fa/_${j}_neg.fa}"
-			else
-            	neg_set+="  ${negative_set/_1_neg.fa/_${j}_neg.fa}"
-			fi
-        fi
-        
-	done
-	echo $matrice
-	if [[ $matrice == *".pfm"* ]]; then
-        python $spacing_mk -mat $matrice -o $results -n ${4%.*}_pwm.svg -minInter $minSpace -maxInter $maxSpace  -pos $results/sets/interdist_peaks_pos.fas -th $th -neg $neg_set -points True -no_absolute_panel -ol $offset_left -or $offset_right --write_inter -one_panel -maxy $maxy
+	if [[ $peak == *"score"* ]];then
+		local pos_file=$peak # no preparation needed
+	elif [[ $peak != *".fa"* ]]; then
+		if [ ! -f $results/${name}/${name}_pos_set.fa ];then
+			bedtools getfasta -fi $genome -bed $peak -fo $results/${name}/${name}_pos_set.fa # need to tranform in fasta
+		fi
+		local peak=$results/${name}/${name}_pos_set.fa
 	fi
-	if [[ $matrice == *".xml"* ]]; then
-        python $spacing_mk -tffm $matrice -o $results -n ${name}_tffm.svg -minInter $minSpace -maxInter $maxSpace  -pos $peak -th $th -neg $neg_set -points True -no_absolute_panel -ol $offset_left -or $offset_right --write_inter -one_panel -maxy $maxy
-    fi
-	inkscape -z -e $results/${name}_tffm.png -w 1800 -h 1080 $results/${name}_tffm.svg
+	if [[ $peak == *".fa"* ]]; then # need to compute scores
+		if [[ $matrice == *".xml"* ]]; then
+			if [ ! -f ${results}/${name}/scores/${name}_tffm_scores_pos.tsv ];then
+				python $tffm_all_scores -o ${results}/${name}/scores/${name}_tffm_scores_pos.tsv -pos $peak -t ${matrice}
+			fi
+			local pos_file=${results}/${name}/scores/${name}_tffm_scores_pos.tsv
+		elif [[ $matrice == *".pfm"* ]]; then
+			local length_mat=$(awk -v OFS="[\t ]" '{if(NR==1){if($5=="SIMPLE"){typM="simple"} else {typM="dependency"};count=-1;next};if(typM=="simple"){count++};if(typM=="dependency"){if($1=="DEPENDENCY"){count-=2;exit};count++}}END{print count}')
+			if [ ! -f ${results}/${name}/scores/$(basename $peak).scores ];then
+				python $scores_prog -m ${matrice} -f $peak -o ${results}/${name}/scores/
+			fi
+			local pos_file=${results}/${name}/scores/$(basename $peak).scores
+		fi
+	fi
+
+	for ((j=1;j<=$number_of_NS;j++))
+	do
+		local tmp_fasta="NA"
+		if [[ ${negative_set} == *"score"* ]];then
+			local tmp_neg_set="${negative_set/_1_neg.fa.scores/_${j}_neg.fa.scores}"
+		elif [[ ${negative_set} == *".bed"* ]];then
+			if [ ! -f $results/${name}/${name}_set_${j}_neg.fa ];then
+				bedtools getfasta -fi $genome -bed ${negative_set/_1_neg.bed/_${j}_neg.bed} -fo $results/${name}/${name}_set_${j}_neg.fa
+			fi
+			local tmp_fasta=$results/${name}/${name}_set_${j}_neg.fa
+			local Neg_is_fasta="true"
+		elif [[ ${negative_set} == *".fa"* ]];then
+			local Neg_is_fasta="true"
+			local tmp_fasta=${negative_set/_1_neg.fa/_${j}_neg.fa}
+		fi
+		if [ $Neg_is_fasta == "true" ]; then
+			if [[ $matrice == *".xml"* ]]; then
+				if [ ! -f ${results}/${name}/scores/${name}_tffm_scores_${j}_neg.tsv ];then
+					python $tffm_all_scores -o ${results}/${name}/scores/${name}_tffm_scores_${j}_neg.tsv -pos $tmp_fasta -t ${matrice}
+				fi
+				local tmp_neg_set="${results}/${name}/scores/${name}_tffm_scores_${j}_neg.tsv"
+			elif [[ $matrice == *".pfm"* ]]; then
+				if [ ! -f ${results}/${name}/scores/$(basename $tmp_fasta).scores ];then
+					python $scores_prog -m ${matrice} -f $tmp_fasta -o ${results}/scores/
+				fi
+				local tmp_neg_set="${results}/${name}/scores/$(basename $tmp_fasta).scores"
+			fi
+		fi
+		if [[ ${neg_set} == "NA" ]]; then
+			local neg_set="$tmp_neg_set"
+		else
+			local neg_set+=" $tmp_neg_set" 
+		fi
+	done 
+ 	python $spacing_mk -o $results/${name}/${name} -smax $maxSpace -smin $minSpace -pos $pos_file -th $th -neg $neg_set -ol $offset_left -or $offset_right -lm $length_mat $list_additional_python
+	Rscript $plot_spacing_v2 -e ${results}/${name}/${name}_enrichment.tsv -d ${results}/${name}/${name} -r ${results}/${name}/${name}_rate.tsv -m $minSpace -c $list_colors -y $maxy $list_additional_R
 done
 
-
-
 }
+
+
+
+
 
 
 heatmap_reads(){
