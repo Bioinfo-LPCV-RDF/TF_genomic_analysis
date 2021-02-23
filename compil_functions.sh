@@ -992,8 +992,129 @@ local list_colors=`join_by " " "${colors[@]}"`
 python $plot_ROCS_prog -s $scores -n $endnames -o ${results} -of ROC.svg -c ${list_colors}
 }
 
-
 compute_space(){
+
+# compute_space -p <PEAKS> -ns <NEG_SET_1> -nb <NB_of_NS> -m <MATRICES> -n <NAMES> -od <RESULT_DIR> -th <THRESHOLDS> -max <MAXY>
+local pocc=false
+while  [[ -n $1 ]] && [[ $1 != "\n" ]] ; do
+	case $1 in
+		-p)
+			local peaks=("${!2}")
+			echo "peaks files set to: ${2}";shift 2;;
+		-ns)
+			local negative_sets=("${!2}")
+			echo "negative files set to: ${2}";shift 2;;
+		-m)
+			local matrices=("${!2}")
+			echo "matrix files set to: ${2}";shift 2;;
+		-n)
+			local names=("${!2}")
+			echo "names associated set to: ${2}";shift 2;;
+        -th)
+			local thresholds=("${!2}")
+			echo "thresholds set to: ${2}";shift 2;;
+        -maxy)
+			local maxy=$2
+			echo "maximum enrichment to display set to: ${2}";shift 2;;
+        -maxs)
+			local maxSpace=$2
+			echo "maximum spacing to compute set to: ${2}";shift 2;;
+        -mins)
+			local minSpace=$2
+			echo "minimum spacing to compute set to: ${2}";shift 2;;
+        -ol)
+			local offset_left=$2
+			echo "offset on the left set to: ${2}";shift 2;;
+        -or)
+			local offset_right=$2
+			echo "offset on the right set to: ${2}";shift 2;;
+        -g)
+			local genome=$2
+			echo "Fasta of the genome set to: ${2}";shift 2;;
+        -nb)
+			local number_of_NS=$2
+			echo "number of negative files to use set to: ${2}";shift 2;;
+		-od)
+			local results=$2
+			echo "output directory set to: ${2}";shift 2;;
+		-pc)
+			local pocc=true
+			echo "Pocc mode activated, pfm will be used to compute PWM score and Pocc";shift 1;;
+		-h)
+			usage compute_space; exit;;
+		--help)
+			usage compute_space; exit;;
+		*)
+			echo "Error in arguments"
+			echo $1; usage compute_space; exit;;
+	esac
+done
+
+local Errors=0
+if [ -z $peaks ]; then echo "ERROR: -p argument needed"; Errors+=1; fi
+if [ -z $negative_sets ]; then echo "ERROR: -ns argument needed"; Errors+=1; fi
+if [ -z $matrices ]; then echo "ERROR: -m argument needed"; Errors+=1; fi
+if [ -z $name ]; then echo "ERROR: -n argument needed"; Errors+=1; fi
+if [ -z $thresholds ]; then echo "ERROR: -th argument needed"; Errors+=1; fi
+if [ -z $results ]; then echo "ERROR: -od argument needed"; Errors+=1; fi
+
+if [ -z $maxy ]; then echo "-maxy argument not used, no limits"; local maxy=0; fi
+if [ -z $maxSpace ]; then echo "-maxs argument not used, using 50"; local maxSpace=50; fi
+if [ -z $minSpace ]; then echo "-mins argument not used, using 0"; local minSpace=0; fi
+if [ -z $offset_left ]; then echo "-ol argument not used, no offset"; local offset_left=0; fi
+if [ -z $offset_right ]; then echo "-or argument not used, no offset"; local offset_right=0; fi
+if [ -z $genome ]; then echo "-g argument not used, assuming A.thaliana is used: /home/304.6-RDF/data/tair10.fas"; local genome="/home/304.6-RDF/data/tair10.fas" ; fi
+if [ -z $number_of_NS ]; then echo "-nb argument not used, 1 negative set used"; local number_of_NS=1; fi
+# if [ -z $colors ]; then echo "-od argument not used, "; local colors=('#40A5C7' '#F9626E' '#F0875A' '#307C95' '#BB4A52' '#B46544'); fi TODO implement
+
+if [ $Errors -gt 0 ]; then usage compute_space; exit 1; fi
+
+mkdir -p $results
+# spacing_mk=/home/304.6-RDF/scripts/DAP_global_analysis_p3.7/get_interdistances.py
+
+for ((i=0;i<${#peaks[@]};i++))
+do
+	local negative_set=${negative_sets[i]}
+	local name=${names[i]} # TODO replace \s in name by _ 
+	local matrice=${matrices[i]}
+	local peak=${peaks[i]}
+	
+	local th=`join_by " " "${thresholds[@]}"`
+	neg_set="NA"
+	if [[ $peak != *".fa"* ]]; then
+        bedtools getfasta -fi $genome -bed $peak -fo $results/pos_set.fa
+        local peak=$results/pos_set.fa
+    fi
+	for ((j=1;j<$number_of_NS;j++))
+	do
+        if [[ ${negative_set} != *".fa"* ]];then
+            bedtools getfasta -fi $genome -bed ${negative_set/_1_neg.bed/_${j}_neg.bed} -fo $results/neg_set_${j}.fa
+            if [[ ${neg_set} == "NA" ]]; then
+                neg_set="$results/neg_set_${j}.fa"
+            else 
+                neg_set+=" $results/neg_set_${j}.fa"
+            fi
+        else
+			if [[ ${neg_set} == "NA" ]]; then
+				neg_set="  ${negative_set/_1_neg.fa/_${j}_neg.fa}"
+			else
+            	neg_set+="  ${negative_set/_1_neg.fa/_${j}_neg.fa}"
+			fi
+        fi
+	done
+	echo $matrice
+	if [[ $matrice == *".pfm"* ]]; then
+        python $spacing_mk -mat $matrice -o $results -n ${4%.*}_pwm.svg -minInter $minSpace -maxInter $maxSpace  -pos $results/sets/interdist_peaks_pos.fas -th $th -neg $neg_set -points True -no_absolute_panel -ol $offset_left -or $offset_right --write_inter -one_panel -maxy $maxy
+	fi
+	if [[ $matrice == *".xml"* ]]; then
+        python $spacing_mk -tffm $matrice -o $results -n ${name}_tffm.svg -minInter $minSpace -maxInter $maxSpace  -pos $peak -th $th -neg $neg_set -points True -no_absolute_panel -ol $offset_left -or $offset_right --write_inter -one_panel -maxy $maxy
+    fi
+	inkscape -z -e $results/${name}_tffm.png -w 1800 -h 1080 $results/${name}_tffm.svg
+done
+}
+
+
+compute_space_v2(){
 
 # compute_space -p <PEAKS> -ns <NEG_SET_1> -nb <NB_of_NS> -m <MATRICES> -n <NAMES> -od <RESULT_DIR> -th <THRESHOLDS> -maxy <MAXY> -maxs -mins -ol -or -g -wi -nap -op -co
 local write_inter=false
